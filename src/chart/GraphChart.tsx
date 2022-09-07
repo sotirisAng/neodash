@@ -51,7 +51,7 @@ const layouts = {
 
 /**
  * Draws graph data using a force-directed-graph visualization.
- * This visualization is powered by `react-force-graph`. 
+ * This visualization is powered by `react-force-graph`.
  * See https://github.com/vasturiano/react-force-graph for examples on customization.
  */
 const NeoGraphChart = (props: ChartProps) => {
@@ -106,6 +106,8 @@ const NeoGraphChart = (props: ChartProps) => {
         console.error(error);
     }
 
+    const setGlobalParameter = props.setGlobalParameter ? props.setGlobalParameter : () => {
+    };
 
     // get dashboard parameters.
     const parameters = props.parameters ? props.parameters : {};
@@ -484,7 +486,7 @@ const NeoGraphChart = (props: ChartProps) => {
                 graphData={width ? data : { nodes: [], links: [] }}
             />
 
-            <NeoGraphItemInspectModal open={open} handleClose={handleClose} title={(inspectItem.labels && inspectItem.labels.join(", ")) || inspectItem.type} object={inspectItem.properties}></NeoGraphItemInspectModal>
+            <NeoGraphItemInspectModal open={open} handleClose={handleClose} title={(inspectItem.labels && inspectItem.labels.join(", ")) || inspectItem.type} object={inspectItem.properties} setGlobalParameter ={props.setGlobalParameter}></NeoGraphItemInspectModal>
         </div>
     </>
 }

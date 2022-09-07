@@ -19,7 +19,7 @@ const formatProperty = (property) => {
     return property;
 }
 
-export const NeoGraphItemInspectModal = ({ open, handleClose, title, object, textAlign = "left" }) => {
+export const NeoGraphItemInspectModal = ({ open, handleClose, title, object, textAlign = "left" , setGlobalParameter }) => {
     return (
         <div>
             <Dialog maxWidth={"lg"} open={open == true} onClose={handleClose} aria-labelledby="form-dialog-title">
@@ -43,7 +43,16 @@ export const NeoGraphItemInspectModal = ({ open, handleClose, title, object, tex
                                                 <TableCell component="th" scope="row">
                                                     {key}
                                                 </TableCell>
-                                                <TableCell align={textAlign}>{formatProperty(object[key].toString())}</TableCell>
+                                                <TableCell align={textAlign}>{
+                                                    (key == "source") ? <button
+                                                        onClick={(event) => {
+                                                            console.log("Setting parameter neodash_record_source" +  " to " + object[key].toString());
+                                                            setGlobalParameter('neodash_record_source', object[key].toString())
+                                                        }
+                                                        }
+                                                    >{'show'}</button> : formatProperty(object[key].toString())}
+
+                                                }</TableCell>
                                             </TableRow>
                                         ))}
                                 </TableBody>

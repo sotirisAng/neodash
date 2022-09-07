@@ -1,16 +1,21 @@
-
-import React, { useEffect } from 'react';
-import { ChartProps } from './Chart';
-import { Icon, TextareaAutosize } from '@material-ui/core';
-import { categoricalColorSchemes } from '../config/ColorConfig';
-import { valueIsArray, valueIsNode, valueIsRelationship, valueIsPath, valueIsObject } from '../report/ReportRecordProcessing';
-import { MapContainer, Polyline, Popup, TileLayer, Tooltip } from "react-leaflet";
-import { HeatmapLayer } from 'react-leaflet-heatmap-layer-v3';
+import React, {useCallback, useEffect} from 'react';
+import {ChartProps} from './Chart';
+import {debounce, Icon, TextareaAutosize} from '@material-ui/core';
+import {categoricalColorSchemes} from '../config/ColorConfig';
+import {
+    valueIsArray,
+    valueIsNode,
+    valueIsRelationship,
+    valueIsPath,
+    valueIsObject
+} from '../report/ReportRecordProcessing';
+import {MapContainer, Polyline, Popup, TileLayer, Tooltip} from "react-leaflet";
+import {HeatmapLayer} from 'react-leaflet-heatmap-layer-v3';
 import Marker from 'react-leaflet-enhanced-marker';
 import MarkerClusterGroup from 'react-leaflet-cluster';
 import LocationOnIcon from '@material-ui/icons/LocationOn';
 import 'leaflet/dist/leaflet.css';
-import { evaluateRulesOnNode } from '../report/ReportRuleEvaluator';
+import {evaluateRulesOnNode} from '../report/ReportRuleEvaluator';
 
 const update = (state, mutations) =>
     Object.assign({}, state, mutations)
@@ -34,14 +39,21 @@ const NeoMapChart = (props: ChartProps) => {
     const intensityProp = props.settings && props.settings.intensityProp ? props.settings.intensityProp : "";
     const defaultNodeColor = "grey"; // Color of nodes without labels
     const dimensions = props.dimensions ? props.dimensions : {width: 100, height: 100};
+    const setGlobalParameter = props.setGlobalParameter ? props.setGlobalParameter : () => {
+    };
+    const queryCallback = props.queryCallback ? props.queryCallback : () => { };
 
-    const [data, setData] = React.useState({ nodes: [], links: [], zoom: 0, centerLatitude: 0, centerLongitude: 0 });
+    const parameter = props.settings && props.settings["parameterName"] ? props.settings["parameterName"] : undefined;
+    // const debouncedQueryCallback = useCallback(debounce(queryCallback, suggestionsUpdateTimeout), [],);
+    // const debouncedSetGlobalParameter = useCallback(debounce(setGlobalParameter, setParameterTimeout), [],);
+
+    const [data, setData] = React.useState({nodes: [], links: [], zoom: 0, centerLatitude: 0, centerLongitude: 0});
 
     // Per pixel, scaling factors for the latitude/longitude mapping function.
     const widthScale = 8.55;
     const heightScale = 6.7;
 
-    var key = dimensions.width + "," + dimensions.height + ","+ data.centerLatitude + "," + data.centerLongitude + "," + props.fullscreen;
+    var key = dimensions.width + "," + dimensions.height + "," + data.centerLatitude + "," + data.centerLongitude + "," + props.fullscreen;
     useEffect(() => {
         data.centerLatitude + "," + data.centerLongitude + "," + props.fullscreen;
     }, [props.fullscreen])
@@ -157,10 +169,13 @@ const NeoMapChart = (props: ChartProps) => {
 
             var assignedColor = node.properties[nodeColorProp] ? node.properties[nodeColorProp] :
                 categoricalColorSchemes[nodeColorScheme][nodeLabelsList.indexOf(node.firstLabel) % totalColors];
-           
+
             assignedColor = evaluateRulesOnNode(node, 'marker color', assignedColor, styleRules);
             const assignedPos = assignPosition(node);
-            return update(node, { pos: node.pos ? node.pos : assignedPos, color: assignedColor ? assignedColor : defaultNodeColor });
+            return update(node, {
+                pos: node.pos ? node.pos : assignedPos,
+                color: assignedColor ? assignedColor : defaultNodeColor
+            });
 
         });
 
@@ -168,7 +183,7 @@ const NeoMapChart = (props: ChartProps) => {
         const linksList = Object.values(links).map(nodePair => {
             return nodePair.map((link, i) => {
                 if (nodes[link.source] && nodes[link.source].pos && nodes[link.target] && nodes[link.target].pos) {
-                    return update(link, { start: nodes[link.source].pos, end: nodes[link.target].pos });
+                    return update(link, {start: nodes[link.source].pos, end: nodes[link.target].pos});
                 }
             });
         }).flat();
@@ -218,7 +233,7 @@ const NeoMapChart = (props: ChartProps) => {
 
     if (layerType == "markers") {
         // Render a node label tooltip
-       
+
         var markerMarginTop = "6px";
         switch (defaultNodeSize) {
             case "large":
@@ -246,20 +261,21 @@ const NeoMapChart = (props: ChartProps) => {
         return node.properties[selectedProp] ? node.properties[selectedProp].toString() : "";
     }
 
-    
+
     function createMarkers() {
         // Create markers to plot on the map
         let markers = data.nodes.filter(node => node.pos && !isNaN(node.pos[0]) && !isNaN(node.pos[1])).map((node, i) =>
             <Marker position={node.pos} key={i}
-                icon={<div style={{ color: node.color, textAlign: "center", marginTop: markerMarginTop }}>
-                    <LocationOnIcon fontSize={node.size}></LocationOnIcon>
-                </div>}>
+                    icon={<div style={{color: node.color, textAlign: "center", marginTop: markerMarginTop}}>
+                        <LocationOnIcon fontSize={node.size}></LocationOnIcon>
+                    </div>}>
                 {props.selection && props.selection[node.firstLabel] && props.selection[node.firstLabel] != "(no label)" ?
-                    <Tooltip direction='bottom' permanent className={"leaflet-custom-tooltip"}> {renderNodeLabel(node)}   </Tooltip>
+                    <Tooltip direction='bottom' permanent
+                             className={"leaflet-custom-tooltip"}> {renderNodeLabel(node)}   </Tooltip>
                     : <></>}
                 {createPopupFromNodeProperties(node)}
             </Marker>);
-        if(clusterMarkers) {
+        if (clusterMarkers) {
             markers = <MarkerClusterGroup chunkedLoading>{markers}</MarkerClusterGroup>
         }
         return markers;
@@ -282,17 +298,17 @@ const NeoMapChart = (props: ChartProps) => {
             [node.pos[0], node.pos[1], intensityProp == "" ? 1 : extractIntensityProperty(node)]
         );
         return <HeatmapLayer
-                fitBoundsOnLoad
-                fitBoundsOnUpdate
-                points={points}
-                longitudeExtractor={m => m[1]}
-                latitudeExtractor={m => m[0]}
-                intensityExtractor={m => parseFloat(m[2])} />
+            fitBoundsOnLoad
+            fitBoundsOnUpdate
+            points={points}
+            longitudeExtractor={m => m[1]}
+            latitudeExtractor={m => m[0]}
+            intensityExtractor={m => parseFloat(m[2])}/>
     }
 
     function extractIntensityProperty(node) {
         // Extract the intensity property from a node.
-        if(node.properties[intensityProp]) {
+        if (node.properties[intensityProp]) {
             // Parse int from Neo4j Integer type if it has this type
             // Or return plain value (if already parsed as a standard integer or float)
             return node.properties[intensityProp].low ?? node.properties[intensityProp];
@@ -312,18 +328,43 @@ const NeoMapChart = (props: ChartProps) => {
     function createPopupFromRelProperties(value) {
         return <Popup className={"leaflet-custom-rel-popup"}>
             <h3><b>{value.type}</b></h3>
-            <table><tbody>{Object.keys(value.properties).length == 0 ? <tr><td>(No properties)</td></tr> : Object.keys(value.properties).map((k, i) => <tr key={i}><td style={{ marginRight: "10px" }} key={0}>{k.toString()}:</td><td key={1}>{value.properties[k].toString()}</td></tr>)}</tbody></table>
+            <table>
+                <tbody>{Object.keys(value.properties).length == 0 ? <tr>
+                    <td>(No properties)</td>
+                </tr> : Object.keys(value.properties).map((k, i) => <tr key={i}>
+                    <td style={{marginRight: "10px"}} key={0}>{k.toString()}:</td>
+                    <td key={1}>{value.properties[k].toString()}</td>
+                </tr>)}</tbody>
+            </table>
         </Popup>;
     }
 
     function createPopupFromNodeProperties(value) {
         return <Popup className={"leaflet-custom-node-popup"}>
             <h3><b>{(value.labels.length > 0) ? value.labels.map(b => b + " ") : "(No labels)"}</b></h3>
-            <table><tbody>{Object.keys(value.properties).length == 0 ? <tr><td>(No properties)</td></tr> : Object.keys(value.properties).map((k, i) => <tr key={i}><td style={{ marginRight: "10px" }} key={0}>{k.toString()}:</td><td key={1}>{value.properties[k].toString()}</td></tr>)}</tbody></table>
+            <table>
+                <tbody>{Object.keys(value.properties).length == 0 ? <tr>
+                        <td>(No properties)</td>
+                    </tr> :
+                    Object.keys(value.properties).map((k, i) =>
+
+                        <tr key={i}>
+                            <td style={{marginRight: "10px"}} key={0}>
+                                {k.toString()}:
+                            </td>
+                            {/*<td key={1}>{(k == "explore") ? <a href={value.properties[k].toString()} >{value.properties[k].toString()}</a> : value.properties[k].toString()}</td>*/}
+                            <td key={1}>{(k == "explore") ? <button
+                                onClick={(event) => {
+                                    console.log("Setting parameter " + parameter + " to " + value.properties[k].toString());
+                                    props.setGlobalParameter('neodash_point_label', value.properties[k].toString())
+                                }
+                                }
+                            >{value.properties[k].toString()}</button> : value.properties[k].toString()}</td>
+                        </tr>)}
+                </tbody>
+            </table>
         </Popup>;
     }
-
-
 
 
     const markers = layerType == "markers" ? createMarkers() : "";
@@ -332,15 +373,18 @@ const NeoMapChart = (props: ChartProps) => {
     const fullscreen = props.fullscreen ? props.fullscreen : true;
 
     // Draw the component.
-    return <MapContainer key={key} style={{ width: "100%", height: "100%" }}
-        center={[data.centerLatitude ? data.centerLatitude : 0, data.centerLongitude ? data.centerLongitude : 0]}
-        zoom={data.zoom ? data.zoom : 0}
-        maxZoom={18}
-        scrollWheelZoom={false}>
+    return <MapContainer key={key} style={{width: "100%", height: "100%"}}
+                         center={[data.centerLatitude ? data.centerLatitude : 0, data.centerLongitude ? data.centerLongitude : 0]}
+                         zoom={data.zoom ? data.zoom : 0}
+                         maxNativeZoom={18}
+                         maxZoom={22}
+                         scrollWheelZoom={false}>
         {heatmap}
         <TileLayer
             attribution='&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            maxNativeZoom={18}
+            maxZoom={22}
         />
         {markers}
         {lines}

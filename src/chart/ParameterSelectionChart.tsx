@@ -109,6 +109,7 @@ const NeoParameterSelectionChart = (props: ChartProps) => {
                     if (newValue == null && clearParameterOnFieldClear) {
                         props.setGlobalParameter(parameter, undefined);
                     } else {
+                        console.log("Setting parameter " + parameter + " to " + newValue);
                         props.setGlobalParameter(parameter, newValue);
                     }
                 }}
