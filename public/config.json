@@ -5,8 +5,8 @@
     "standaloneProtocol": "neo4j",
     "standaloneHost": "localhost",
     "standalonePort": "7687",
-    "standaloneDatabase": "neo4j",
+    "standaloneDatabase": "demo",
     "standaloneDashboardName": "My Dashboard",
-    "standaloneDashboardDatabase": "dashboards",
+    "standaloneDashboardDatabase": "demo",
     "standaloneDashboardURL": ""
 }

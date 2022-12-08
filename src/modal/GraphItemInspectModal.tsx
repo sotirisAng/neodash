@@ -44,17 +44,23 @@ export const NeoGraphItemInspectModal = ({ open, handleClose, title, object, tex
                                                     {key}
                                                 </TableCell>
                                                 <TableCell align={textAlign}>{
-                                                    (key == "source") ? <button
-                                                        onClick={(event) => {
-                                                            console.log("Setting parameter neodash_record_source" +  " to " + object[key].toString());
-                                                            setGlobalParameter('neodash_record_source', object[key].toString())
-                                                        }
-                                                        }
-                                                    >{'show'}</button> : formatProperty(object[key].toString())}
-
-                                                }</TableCell>
+                                                        formatProperty(object[key].toString()) }
+                                                </TableCell>
                                             </TableRow>
                                         ))}
+                                    { title.includes("Record, Photograph") ?
+                                        <TableRow key={"show_button"}>
+                                        <TableCell component="th" scope="row">
+                                        <button
+                                        onClick={(event) => {
+                                        console.log("Setting parameter neodash_record_source" +  " to " + object["name"].toString());
+                                        setGlobalParameter('neodash_record_name', object["name"].toString())
+                                    }
+                                    }
+                                        >{'show'}</button>
+                                        </TableCell>
+                                        </TableRow>
+                                        : null}
                                 </TableBody>
                             </Table>
                         </TableContainer>

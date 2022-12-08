@@ -44,7 +44,7 @@ export const REPORT_TYPES = {
         helperText: "A table will contain all returned data.",
         component: NeoTableChart,
         maxRecords: 1000,
-      
+
         settings: {
             "transposed": {
                 label: "Transpose Rows & Columns",
@@ -607,7 +607,7 @@ export const REPORT_TYPES = {
             "layerType": {
                 label: "Layer Type",
                 type: SELECTION_TYPES.LIST,
-                values: ["markers", "heatmap"],
+                values: ["markers", "heatmap", "lines"],
                 default: "markers"
             },
             "clusterMarkers": {

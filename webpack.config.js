@@ -34,7 +34,7 @@ module.exports = {
         filename: 'bundle.js'
     },
     devServer: {
-        port: 3000,
+        port: 3003,
         hot: true
     },
     plugins: [new webpack.HotModuleReplacementPlugin()]
